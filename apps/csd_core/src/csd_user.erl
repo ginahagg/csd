@@ -48,14 +48,14 @@ save(User=#user{}) ->
   csd_db:save_user(User).
 
 to_json(#user{name=N, id=T, joined=J}) ->
-  jiffy:encode({[
+  jsx:encode({[
       {<<"name">>, N},
       {<<"id">>, T},
       {<<"joined">>, J}
     ]}).
 
 from_json(UserJson) ->
-  {User} = jiffy:decode(UserJson),
+  {User} = jsx:decode(UserJson),
   #user{
     id = proplists:get_value(<<"id">>, User),
     name = proplists:get_value(<<"name">>, User),

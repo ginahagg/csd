@@ -6,6 +6,10 @@
     {applications,
       [
         kernel,
+        pooler,
+        flake,
+        jsx,
+        webmachine,
         stdlib
       ]
     },

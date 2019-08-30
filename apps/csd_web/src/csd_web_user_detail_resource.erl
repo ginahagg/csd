@@ -60,6 +60,6 @@ to_json(ReqData, State) ->
       {<<"page">>, Page},
       {<<"pages">>, Pages}
     ]},
-  Json = jiffy:encode(UserData),
+  Json = jsx:encode(UserData),
   {Json, ReqData, State}.
 

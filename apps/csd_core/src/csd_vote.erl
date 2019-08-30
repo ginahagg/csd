@@ -64,7 +64,7 @@ count_for_snippet(SnippetId, UserId) ->
   }}.
 
 to_json(#vote{time=T, which=W, snippet_id=S, user_id=U}) ->
-  jiffy:encode({[
+  jsx:encode({[
       {<<"time">>, T},
       {<<"user_id">>, U},
       {<<"snippet_id">>, S},
@@ -72,7 +72,7 @@ to_json(#vote{time=T, which=W, snippet_id=S, user_id=U}) ->
     ]});
 
 to_json(#count{left=L, right=R, which=W}) ->
-  jiffy:encode({[
+  jsx:encode({[
       {<<"left">>, L},
       {<<"right">>, R},
       {<<"which">>, W}
@@ -100,7 +100,7 @@ get_id(UserId, SnippetId) when is_integer(UserId) ->
   iolist_to_binary([integer_to_list(UserId), <<"-">>, SnippetId]).
 
 from_json(Json) ->
-  {List} = jiffy:decode(Json),
+  {List} = jsx:decode(Json),
   #vote{
     time = proplists:get_value(<<"time">>, List),
     user_id = proplists:get_value(<<"user_id">>, List),
@@ -109,13 +109,13 @@ from_json(Json) ->
   }.
 
 random_votes(SnippetId, NumVotes) ->
-  random:seed(erlang:now()),
+  rand:seed(os:timestamp()),
   lists:map(fun(_) ->
-        Which = case random:uniform(99999999) rem 2 of
+        Which = case rand:uniform(99999999) rem 2 of
           0 -> "left";
           _ -> "right"
         end,
-        V = to_vote(random:uniform(99999999), SnippetId, Which),
+        V = to_vote(rand:uniform(99999999), SnippetId, Which),
         save(V) end, lists:seq(1, NumVotes)),
   ok.
 

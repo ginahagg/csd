@@ -41,7 +41,7 @@
   %iolist_to_binary([Key, integer_to_list(Timestamp)]).
 
 to_snippet(Title, Left, Right, UserId) ->
-  Now = erlang:now(),
+  Now = os:timestamp(),
   #snippet{
     user_id = UserId,
     key = csd_riak:new_key(),
@@ -90,7 +90,7 @@ set_key(Snippet=#snippet{}, NewKey) ->
   }.
 
 to_json(#snippet{user_id=U, key=K, title=T, left=L, right=R, created=C}) ->
-  jiffy:encode({[
+  jsx:encode({[
     {<<"user_id">>, U},
     {<<"key">>, K},
     {<<"title">>, T},
@@ -100,7 +100,7 @@ to_json(#snippet{user_id=U, key=K, title=T, left=L, right=R, created=C}) ->
   ]}).
 
 from_json(SnippetJson) ->
-  {Data} = jiffy:decode(SnippetJson),
+  {Data} = jsx:decode(SnippetJson),
   #snippet{
     user_id = proplists:get_value(<<"user_id">>, Data),
     key = proplists:get_value(<<"key">>, Data),

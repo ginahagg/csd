@@ -40,7 +40,7 @@ to_comment(UserId, SnippetId, Body, ReplyToId) ->
   }.
 
 to_json(#comment{user_id=U, snippet_id=S, body=B, time=T}) ->
-  jiffy:encode({[
+  jsx:encode({[
       {<<"user_id">>, U},
       {<<"snippet_id">>, S},
       {<<"body">>, B},
@@ -57,7 +57,7 @@ save(Comment=#comment{}) ->
   csd_db:save_comment(Comment).
 
 from_json(Json) ->
-  {List} = jiffy:decode(Json),
+  {List} = jsx:decode(Json),
   #comment{
     user_id = proplists:get_value(<<"user_id">>, List),
     snippet_id = proplists:get_value(<<"snippet_id">>, List),

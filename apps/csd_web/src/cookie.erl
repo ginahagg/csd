@@ -22,7 +22,7 @@
 %% --------------------------------------------------------------------------------------
 
 auth_required_json() ->
-  jiffy:encode({[{<<"error">>, <<"unauthorized">>}]}).
+  jsx:encode({[{<<"error">>, <<"unauthorized">>}]}).
 
 remove_auth(ReqData) ->
   store_auth_cookie(ReqData, "", -1).
@@ -56,7 +56,7 @@ store_auth_cookie(ReqData, Value, Expiry) ->
 
 decode(CookieValue) ->
   {Value={Id, Name, Expire, SecretInfo}, Salt, Sign} = binary_to_term(base64:decode(CookieValue)),
-  case crypto:sha_mac(?AUTH_SECRET, term_to_binary([Value, Salt])) of
+  case crypto:hmac(sha,?AUTH_SECRET, term_to_binary([Value, Salt])) of
     Sign ->
       case Expire >= calendar:local_time() of
         true ->
@@ -72,7 +72,7 @@ decode(CookieValue) ->
 encode(Id, Name, Token, TokenSecret) ->
   SecretInfo = encrypt({Token, TokenSecret}),
   CookieValue = {Id, Name, get_expiry(), SecretInfo},
-  base64:encode(term_to_binary({CookieValue, ?AUTH_SALT, crypto:sha_mac(?AUTH_SECRET, term_to_binary([CookieValue, ?AUTH_SALT]))})).
+  base64:encode(term_to_binary({CookieValue, ?AUTH_SALT, crypto:hmac(sha,?AUTH_SECRET, term_to_binary([CookieValue, ?AUTH_SALT]))})).
 
 get_expiry() ->
   {Date, Time} = calendar:local_time(),
@@ -80,9 +80,13 @@ get_expiry() ->
   {NewDate, Time}.
 
 encrypt(Value) ->
-  crypto:aes_ctr_encrypt(?ENC_KEY, ?ENC_IV, term_to_binary([Value, ?AUTH_SALT])).
+  %crypto:aes_ctr_encrypt(?ENC_KEY, ?ENC_IV, term_to_binary([Value, ?AUTH_SALT])).
+  StateEnc = crypto:crypto_init(aes_256_ctr, ?ENC_KEY, ?ENC_IV, true), % encrypt -> true
+	crypto:crypto_update(StateEnc, term_to_binary([Value, ?AUTH_SALT])).
 
 decrypt(Value) ->
-  [V, ?AUTH_SALT] = binary_to_term(crypto:aes_ctr_decrypt(?ENC_KEY, ?ENC_IV, Value)),
+  StateEnc = crypto:crypto_init(aes_256_ctr, ?ENC_KEY, ?ENC_IV, false),
+  [V, ?AUTH_SALT] = binary_to_term(crypto:crypto_update(StateEnc, Value)),
+  %[V, ?AUTH_SALT] = binary_to_term(crypto:aes_ctr_decrypt(?ENC_KEY, ?ENC_IV, Value)),
   V.
 
